@@ -57,14 +57,12 @@ def main():
             if word not in textList:
                 # if not, we translate it
                 translation = TRANSLATOR.translate(word, src='en', dest='ru').text
-                # We receive the transcription
-                transcription = get_transcription(word) 
                 # and finally add it in add mode 'a'
                 with open('./dbWords/words.txt', 'a') as file:
                     # add to file
                     file.write(f'{word} {transcription} {translation} \n')
                     # print the entire line to the console
-                    print(f'{word} {transcription} {translation} \n')
+                    print(f'{word} {translation}\n')
 
 
 
