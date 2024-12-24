@@ -1,20 +1,20 @@
 import os
+import time
 
+import enchant
 from googletrans import Translator
 from gtts import gTTS
 
 TRANSLATOR = Translator()
-# Creating a transcription object for the Russian language
-COUNTER = 0
+
 
 def main():
-
     # Creates a dictionary and stores it in a set
     def createEnDict():
         # empty set
-        outList = set() 
+        outList = set()
         # reads a file with a dirty word base
-        with open('./words.txt', 'r') as file:  
+        with open("./words.txt", "r") as file:
             # save all text into a string
             text: str = file.read()
             # split the string into a list
@@ -32,60 +32,57 @@ def main():
         # return the finished set
         return outList
 
+    def getAudio(word, lang="ru"):
+        if not os.path.exists(f"./dbWords/{word}.mp3"):
+            tts = gTTS(text=word, lang="en")
+            tts.save(f"./dbWords/{word}.mp3")
+        if not os.path.exists(f"./dbWords/{word} slow.mp3"):
+            tts = gTTS(text=word, lang="en", slow=True)
+            tts.save(f"./dbWords/{word} slow.mp3")
+
     def translateWord(word):
-        def get_transcription(word, lang='ru'):
-            tts = gTTS(text=word, lang=lang)
-            tts.save(f'./dbWords/temp.mp3')
-            return tts.text
         # empty list
-        checkList = [] 
+        checkList = []
         # read the file into which we will save the words
-        with open('./dbWords/words.txt', 'r') as file:
+        with open("./dbWords/words.txt", "r") as file:
             # get a list of words
             textList: list = file.readlines()
-
-            if len(textList) == 10:
-                exit()
             # let's go through the list
             for tl in textList:
                 # split the string by spaces
-                tl.split(' ')
-                # add to the checklist only 
+                tl.split(" ")
+                # add to the checklist only
                 # English word
                 checkList.append(tl[0])
             # check if a potential word exists in the common database
             if word not in textList:
                 # if not, we translate it
-                translation = TRANSLATOR.translate(word, src='en', dest='ru').text
+                translation = TRANSLATOR.translate(word, src="en", dest="ru").text
+                getAudio(word)
                 # and finally add it in add mode 'a'
-                with open('./dbWords/words.txt', 'a') as file:
+                with open("./dbWords/words.txt", "a") as file:
                     # add to file
-                    file.write(f'{word} {transcription} {translation} \n')
+                    file.write(f"{word} {translation}\n")
                     # print the entire line to the console
-                    print(f'{word} {translation}\n')
+                    print(f"{word} {translation}\n")
 
+    def is_word_in_dictionary(word):
+        d = enchant.Dict("en_US")
+        return d.check(word)
 
-
-    # def audio(word):
-    #     tts = gTTS(text=word, lang='en')
-    #     tts.save("temp.mp3")
-    #
-
+    # Launches all functions
     def run(words):
-        print('run translate...')
+        COUNTER = 0
         for word in words:
-            translateWord(word)
-
-    # # Преобразование аудиофайла в текст (транскрипция)
-    # os.system("ffmpeg -i temp.mp3 temp.wav")
-    # os.system("pocketsphinx_continuous -infile temp.wav 2>&1 | grep '^[A-Z]'")
-    #
-    # # Удаление временных файлов
-    # os.remove("temp.mp3")
-    # os.remove("temp.wav")
+            if is_word_in_dictionary(word):
+                translateWord(word)
+                print(word, COUNTER)
+                COUNTER += 1
+                time.sleep(2)
 
     listWords = createEnDict()
     run(listWords)
+
+
 if __name__ == "__main__":
     main()
-    
